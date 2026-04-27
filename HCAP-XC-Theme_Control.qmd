@@ -1,0 +1,61 @@
+---
+title: "Title of talk"
+title-slide-attributes:
+  data-background-image: FIGURES/HCAP-XC-Watermark-20260304.png
+  data-background-size: contain
+  data-background-opacity: "1"
+author: "Author Name"
+date: 2026-03-03
+format: 
+  revealjs:
+    theme: white
+    slide-number: true
+    self-contained: true
+    code-copy: true
+    code-line-numbers: true
+    fig-align: center
+    controls: true
+    controls-layout: bottom-right
+editor: source
+include-in-header:
+  - text: |
+      <style>
+      .reveal .slide-number {
+        top: 1em !important;
+        right: 1em !important;
+        bottom: auto !important;
+        left: auto !important;
+      }
+      .reveal pre {
+        max-height: 850px !important;
+        width: 100% !important;
+        overflow-y: auto !important;
+      }
+      .reveal pre code {
+        max-height: 850px !important;
+        overflow-y: auto !important;
+      }
+      </style>
+---
+
+```{r setup}
+#| include: false
+
+# Load libraries and environment settings
+# Do analyses where code and output is
+# not necessarily intended to share with
+# audience
+source(here::here("R", "000-Libraries.R"))
+source(here::here("R", "001-Environment-settings.R"))
+```
+
+# Introduction
+
+<!-- Include individual slides -->
+
+{{< include R/010-Introduction.qmd >}}
+
+
+---
+
+(fin)
