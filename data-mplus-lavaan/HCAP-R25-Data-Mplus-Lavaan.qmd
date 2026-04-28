@@ -183,13 +183,19 @@ library(tidyverse)
 library(haven)
 library(lavaan)
 
+if (Sys.info()["sysname"] == "Windows"){
+  dropbox_dir <- "C:/Users/emmanich/P2AGING Dropbox/Emma Nichols/"
+} else {
+  dropbox_dir <- "/Users/emmanich/P2AGING Dropbox/Emma Nichols/"
+}
+
 data_file <- paste0(
-  "C:/Users/emmanich/P2AGING Dropbox/Emma Nichols/",
+  dropbox_dir,
   "HCAP-R25-Best-Practices/POSTED/DATA/SOURCE/",
   "hcap2016_memory_analytic.dta"
 )
 mplus_dir <- paste0(
-  "C:/Users/emmanich/P2AGING Dropbox/Emma Nichols/",
+  dropbox_dir,
   "HCAP-R25-Best-Practices/POSTED/DATA/DERIVED/", 
   "mplus_exports"
 )
@@ -385,7 +391,7 @@ mplus_dat_export |>
 
 ## Manual Mplus export from R
 
-```
+```r
 mplus_data_file <- file.path(mplus_dir, "hcap_memory_manual.dat")
 
 write.table(
@@ -407,6 +413,7 @@ write.table(
 These programs will prepare your plain text data file and handle the part of the Mplus command file that provides information like the variable names and their order in the plain text file. This is important because Mplus input text files will not contain variable names or column headers. 
 
 **Why use these tools?**
+
 - Keeps model syntax and data preparation in one workflow.
 - Reduces hand-edited `NAMES` and column-order mistakes.
 - Can prepare many related Mplus models programmatically.
