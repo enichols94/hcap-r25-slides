@@ -1,0 +1,500 @@
+---
+title: "Preparing Data for Mplus and lavaan"
+subtitle: "HCAP R25 Best Practices"
+title-slide-attributes:
+  data-background-image: ../FIGURES/HCAP-XC-Watermark-20260304.png
+  data-background-size: contain
+  data-background-opacity: "1"
+author: "HCAP R25"
+date: 2026-04-27
+execute: 
+  echo: true
+  warning: false
+  message: false
+format:
+  revealjs:
+    theme: white
+    slide-level: 2
+    slide-number: true
+    self-contained: true
+    code-copy: true
+    code-line-numbers: true
+    fig-align: center
+    controls: true
+    controls-layout: bottom-right
+    navigation-mode: linear
+    scrollable: true
+editor: source
+include-in-header:
+  - text: |
+      <style>
+      .reveal .slide-number {
+        top: 1em !important;
+        right: 1em !important;
+        bottom: auto !important;
+        left: auto !important;
+      }
+      .reveal pre {
+        max-height: 820px !important;
+        width: 100% !important;
+        overflow-y: auto !important;
+      }
+      .reveal pre code {
+        max-height: 820px !important;
+        overflow-y: auto !important;
+      }
+      .reveal .small-text {
+        font-size: 0.78em;
+      }
+      .reveal .tiny-text {
+        font-size: 0.62em;
+      }
+      .reveal .syntax-pair pre {
+        font-size: 0.55em;
+      }
+      .reveal .compact-table table {
+        font-size: 0.68em;
+        line-height: 1.05;
+      }
+      .reveal .compact-table th,
+      .reveal .compact-table td {
+        padding: 0.22em 0.42em;
+      }
+      .reveal .callout-note {
+        border-left: 0.28em solid #007c89;
+        font-size: 0.78em;
+        padding-left: 0.7em;
+      }
+      </style>
+---
+
+## Session Overview
+
+## Goals
+
+::: {.small-text}
+Learn best practices for preparing data for modeling in Mplus and lavaan.
+
+- Read the HCAP 2016 memory analytic data set in R.
+- Inspect variables before fitting a measurement model.
+- Build a lavaan-ready analysis data frame.
+- Export Mplus-ready data manually and with MplusAutomation.
+- Show analogous process in Stata with runmplus. 
+- Recognize what changes when the same data move from R to Mplus.
+:::
+
+## Data workflows
+::: columns
+::: {.column width="50%"}
+![](../FIGURES/lavaan_workflow.png)
+:::
+::: {.column width="50%"}
+![](../FIGURES/LVMWS-01-31-Mplus-Workflow.png)
+:::
+:::
+
+## Data workflow - concrete steps
+
+::: {.small-text}
+1. Read the data.
+2. Confirm variables, labels, and values.
+3. Decide which variables enter the model.
+4. Handle categorical covariates and missing values.
+5. Keep one lavaan-ready object in R.
+6. Export one plain-text file for Mplus.
+:::
+
+## Our example dataset
+
+::: {.small-text}
+Today's example uses the analytic HCAP 2016 data from the memory domain.
+
+- N = 3,496 HCAP respondents.
+- Item-level data comes from HCAP 2016 cognitive data.
+- Age and HCAP weight come from the HCAP respondent file.
+- Education, sex, race/ethnicity, come from HRS Tracker.
+:::
+
+## Memory variables
+
+::: {.compact-table}
+| Variable | Description |
+|---|---|
+| `vdmde1` | CERAD word list delayed recall, 0-10 |
+| `vdmde2` | Logical memory delayed recall, 0-25 |
+| `vdmde3` | MMSE 3-word delayed recall, 0-3 |
+| `vdmde4` | CERAD constructional praxis delayed, 0-11 |
+| `vdmde5` | Brave Man delayed recall, 0-12 |
+| `vdmre1` | CERAD word list recognition, 0-20 |
+| `vdmre2` | Logical memory recognition, 0-15 |
+:::
+
+## Range-normalized variables
+
+::: {.callout-note}
+The dataset also contains range-normalized variables with a `z` suffix. These are **not** standard z-scores, but instead are range-normalized proportion scores bounded away from exact 0 and 1.
+:::
+
+::: {.small-text}
+These variables are useful for measurement models that need item-level inputs on a common bounded scale. The proportion-scaling transformation is:
+:::
+
+$$ 
+x_{z} = \frac{x+\epsilon}{max +2\epsilon}
+$$
+
+::: {.small-text}
+where $\epsilon$ is a small constant (e.g., 0.01) to avoid exact 0 and 1 values. This is helpful for factor analysis models using logit or probit link functions, which can have estimation issues with boundary values. The `z` variables are already transformed and ready for modeling, so we will use them here.
+:::
+
+## Mplus and lavaan use data differently
+
+:::: columns
+::: {.column width="50%"}
+### lavaan
+
+::: {.small-text}
+- Uses an R data frame.
+- Keeps column names.
+- Can use `NA` values directly.
+- Model and missing-data choices are in the R function call.
+:::
+:::
+
+::: {.column width="50%"}
+### Mplus
+
+::: {.small-text}
+- Usually uses plain-text numeric data.
+- No header row in the data file.
+- Variable order must match `NAMES`.
+- Missing values must be declared explicitly.
+:::
+:::
+::::
+
+
+```{r setup}
+#| message: false
+#| warning: false
+#| include: false
+
+library(tidyverse)
+library(haven)
+library(lavaan)
+
+data_file <- paste0(
+  "C:/Users/emmanich/P2AGING Dropbox/Emma Nichols/",
+  "HCAP-R25-Best-Practices/POSTED/DATA/SOURCE/",
+  "hcap2016_memory_analytic.dta"
+)
+mplus_dir <- paste0(
+  "C:/Users/emmanich/P2AGING Dropbox/Emma Nichols/",
+  "HCAP-R25-Best-Practices/POSTED/DATA/DERIVED/", 
+  "mplus_exports"
+)
+
+missing_code <- -9999
+
+get_var_label <- function(x) {
+  label <- attr(x, "label", exact = TRUE)
+  if (is.null(label)) "" else as.character(label)
+}
+
+as_label_chr <- function(x) {
+  as.character(haven::as_factor(x))
+}
+```
+
+## Read the data
+
+```{r read-data}
+hcap_raw <- haven::read_dta(data_file)
+
+dplyr::glimpse(hcap_raw)
+```
+
+## Check the analysis variables
+
+```{r check-analysis-vars}
+available_vars <- names(hcap_raw)
+
+memory_raw_vars <- c(
+  "vdmde1", "vdmde2", "vdmde3", "vdmde4", "vdmde5",
+  "vdmre1", "vdmre2"
+)
+
+memory_z_vars <- c(
+  "vdmde1z", "vdmde2z", "vdmde4z", "vdmde5z",
+  "vdmre1z", "vdmre2z"
+)
+
+memory_vars <- sort(c(
+  memory_z_vars, 
+  setdiff(memory_raw_vars, stringr::str_replace(memory_z_vars, "z$", ""))
+))
+
+covariate_vars <- c("age", "schlyrs", "sex", "race3", "hispanic")
+
+analysis_vars <- c(
+  memory_vars,
+  covariate_vars
+)
+
+tibble(variable = analysis_vars) |>
+  mutate(in_data = variable %in% available_vars) |>
+  print(n = Inf)
+```
+
+## Variable labels
+
+```{r variable-labels}
+tibble(
+  variable = analysis_vars,
+  label = map_chr(analysis_vars, ~ get_var_label(hcap_raw[[.x]]))
+) |>
+  print(n = Inf)
+```
+
+## Categorical variables
+
+```{r categorical-values}
+for (var in c("sex", "race3", "hispanic", "vdmde3")) {
+  cat("Variable:", var, "\n")
+  print(hcap_raw |> count(!!sym(var) := haven::as_factor(!!sym(var))))
+  cat("\n")
+}
+```
+
+## Missing values
+
+```{r missing-values}
+hcap_raw |>
+  select(all_of(analysis_vars)) |>
+  summarise(across(everything(), ~ sum(is.na(.x)))) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "n_missing"
+  ) |>
+  mutate(pct_missing = 100 * n_missing / nrow(hcap_raw)) |>
+  arrange(desc(pct_missing))
+```
+
+## Variable ranges
+
+```{r variable-ranges}
+hcap_raw |>
+  select(all_of(c(memory_vars, "age", "schlyrs"))) |>
+  summarise(
+    across(
+      everything(),
+      list(
+        min = ~ min(.x, na.rm = TRUE),
+        max = ~ max(.x, na.rm = TRUE),
+        mean = ~ mean(.x, na.rm = TRUE)
+      )
+    )
+  ) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = c("variable", ".value"),
+    names_pattern = "(.+)_(min|max|mean)"
+  )
+```
+
+## Create analysis indicators
+
+```{r recode-covariates}
+analysis_dat <- hcap_raw |>
+  mutate(
+    id = row_number(),
+    across(all_of(c(memory_vars)), as.numeric),
+    age = as.numeric(age),
+    educ = as.numeric(schlyrs),
+    female = as.integer(str_detect(as_label_chr(sex), regex("^female$", ignore_case = TRUE))),
+    black = as.integer(str_detect(as_label_chr(race3), regex("black", ignore_case = TRUE))),
+    other_race = as.integer(str_detect(as_label_chr(race3), regex("other", ignore_case = TRUE))),
+    hispanic = as.integer(str_detect(as_label_chr(hispanic), regex("^hispanic$", ignore_case = TRUE))),
+    .keep = "none"
+  )
+
+dplyr::glimpse(analysis_dat)
+```
+
+## Prepare data for lavaan
+
+::: {.small-text}
+For lavaan, the data can stay in R with `NA` values. The model-fitting call decides how to handle missingness.
+:::
+
+```{r lavaan-data}
+lavaan_dat <- analysis_dat |>
+  select(
+    id,
+    memory_vars,
+  )
+
+lavaan_dat |>
+  slice_head(n = 8)
+```
+
+## Prepare data for Mplus (1)
+
+::: {.small-text}
+Mplus variable names are easiest to manage when they are short, lower-case, and listed in the exact order they appear in the exported data file.
+:::
+
+```{r mplus-data-object}
+mplus_dat <- analysis_dat |>
+  mutate(
+    id = id,
+    de1 = vdmde1z,
+    de2 = vdmde2z,
+    de3 = vdmde3, 
+    de4 = vdmde4z,
+    de5 = vdmde5z,
+    re1 = vdmre1z,
+    re2 = vdmre2z,
+    .keep = "none"
+  )
+
+mplus_dat |>
+  slice_head(n = 8)
+```
+
+## Prepare data for Mplus (2)
+
+::: {.small-text}
+Mplus also requires missing data to be coded with a specific numeric value (e.g., `-9999`) and declared in the syntax. 
+:::
+
+```{r mplus-missing-code}
+mplus_dat_export <- mplus_dat |>
+  mutate(across(everything(), ~ replace_na(.x, missing_code)))
+
+mplus_dat_export |>
+  summarise(across(everything(), ~ sum(.x == missing_code))) |>
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "n_missing_code"
+  ) |>
+  arrange(desc(n_missing_code))
+```
+
+## Manual Mplus export from R
+
+```
+mplus_data_file <- file.path(mplus_dir, "hcap_memory_manual.dat")
+
+write.table(
+  mplus_dat_export,
+  file = mplus_data_file,
+  sep = "\t",
+  row.names = FALSE,
+  col.names = FALSE,
+  quote = FALSE,
+  na = missing_code
+)
+```
+
+## Automatic routes 
+
+::: {.small-text}
+- MplusAutomation package in R, or 
+- runmplus package in Stata
+These programs will prepare your plain text data file and handle the part of the Mplus command file that provides information like the variable names and their order in the plain text file. This is important because Mplus input text files will not contain variable names or column headers. 
+
+**Why use these tools?**
+- Keeps model syntax and data preparation in one workflow.
+- Reduces hand-edited `NAMES` and column-order mistakes.
+- Can prepare many related Mplus models programmatically.
+:::
+
+## MplusAutomation data prep
+
+::: {.small-text}
+`MplusAutomation` can write the data file and input file from R. Here `run = FALSE`, so the code prepares files without launching Mplus. Change to `run = TRUE` only when Mplus is installed and you want to estimate the model.
+:::
+
+```{r mplusautomation-model}
+library(MplusAutomation)
+
+mplus_object <- mplusObject(
+  TITLE = "HCAP 2016 memory CFA;",
+  VARIABLE = "
+    idvariable = id; ## a nice option of mplusautomation that requires more attention if doing mannual export
+    USEVARIABLES = de1 de2 de3 de4 de5 re1 re2;
+    CATEGORICAL = de3; 
+    MISSING = ALL (-9999);
+  ",
+  ANALYSIS = "
+    ESTIMATOR = WLSMV;
+    PARAMETERIZATION = THETA;
+  ",
+  MODEL = "
+    memory BY de1* de2 de3 de4 de5 re1 re2;
+    memory@1;
+    [memory@0]
+  ",
+  OUTPUT = "STDYX;",
+  rdata = mplus_dat ## version with short names, but without missing data fix! 
+)
+
+mplus_fit <- mplusModeler(
+  object = mplus_object,
+  modelout = file.path(mplus_dir, "hcap_memory_mplusautomation.inp"),
+  dataout = file.path(mplus_dir, "hcap_memory_mplusautomation.dat"),
+  run = FALSE,
+  writeData = "always",
+  hashfilename = FALSE
+)
+```
+
+## Inspect MplusAutomation files
+
+```{r inspect-mplusautomation-files}
+list.files(mplus_dir, pattern = "hcap_memory_mplusautomation")
+
+readLines(
+  file.path(mplus_dir, "hcap_memory_mplusautomation.dat"),
+  n = 45
+)
+```
+
+## Stata route: prepare data (not shown) and use runmplus
+
+::: {.small-text}
+`runmplus` can prepare the data and Mplus input from Stata. This is an alternate workflow for Stata users; the R code in this deck is the runnable path.
+:::
+
+```stata
+* Install/search from Stata
+findit runmplus
+
+* Example only: syntax may be adapted for local runmplus conventions
+runmplus de1 de2 de3 de4 de5 re1 re2, cat(de3) ///
+  model("memory BY de1 de2 de3 de4 de5 re1 re2;") ///
+  idvariable(id)
+  analysis("ESTIMATOR = WLSMV; LINK = PROBIT;") ///
+  variable("MISSING = ALL (-9999);")
+```
+
+## Final checklist
+
+::: {.small-text}
+- Are the analysis variables present and labeled as expected?
+- Are categorical covariates coded numerically for Mplus?
+- Do Mplus `NAMES` match the exact exported column order?
+- Are missing values handled appropriately? 
+:::
+
+## Closing takeaways
+
+::: {.small-text}
+- lavaan can work directly with an R analysis data frame.
+- Mplus needs a carefully ordered plain-text data file plus matching syntax.
+- MplusAutomation and runmplus reduce column-order and file-writing mistakes.
+- The best preparation workflow is scripted, inspectable, and easy to rerun.
+:::
