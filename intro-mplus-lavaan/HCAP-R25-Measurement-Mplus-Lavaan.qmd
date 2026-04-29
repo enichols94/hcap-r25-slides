@@ -5,8 +5,8 @@ title-slide-attributes:
   data-background-image: ../FIGURES/HCAP-XC-Watermark-20260304.png
   data-background-size: contain
   data-background-opacity: "1"
-author: "HCAP R25"
-date: 2026-04-27
+author: "Emma Nichols"
+date: 2026-05-12
 format:
   revealjs:
     theme: white
@@ -30,14 +30,11 @@ include-in-header:
         bottom: auto !important;
         left: auto !important;
       }
-      .reveal pre {
-        max-height: 850px !important;
-        width: 100% !important;
-        overflow-y: auto !important;
-      }
+      .reveal pre,
       .reveal pre code {
-        max-height: 850px !important;
-        overflow-y: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        white-space: pre-wrap;
       }
       .reveal .columns.syntax-pair pre {
         font-size: 0.55em;
@@ -170,7 +167,6 @@ include-in-header:
       </style>
 ---
 
-## Session Overview
 
 ## Goals
 
@@ -298,7 +294,7 @@ lavaan documentation and examples are available on the lavaan website (Rosseel, 
 
 ![](../FIGURES/LVMWS-01-31-Mplus-Workflow.png){.diagram}
 
-## lavaan workflow
+## Lavaan workflow
 
 ![](../FIGURES/lavaan_workflow.png){.diagram}
 
@@ -572,6 +568,10 @@ model <- '
 
 ## CFA with covariates
 
+::: {.small-text}
+Also called a Multiple Indicators, Multiple Causes model. Combines a measurement model for the latent construct with observed predictors of that construct.
+:::
+
 ::: {.cfa-stack}
 <div class="cfa-diagram">
   <img src="../FIGURES/LVMWS-01-16-PATH-CFA-with-covariates.png" alt="CFA with covariates path diagram">
@@ -585,35 +585,6 @@ $$
 \end{aligned}
 $$
 :::
-:::
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-MODEL:
-          eta1 BY y1-y3 ;
-          eta1 ON x1 x2 ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  eta1 =~ y1 + y2 + y3
-  eta1 ~ x1 + x2
-'
-```
-:::
-::::
-
-## MIMIC model
-
-::: {.small-text}
-Multiple Indicators, Multiple Causes models combine a measurement model for the latent construct with observed predictors of that construct.
 :::
 
 :::: {.columns .syntax-pair}

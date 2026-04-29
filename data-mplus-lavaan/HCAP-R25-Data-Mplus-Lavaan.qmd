@@ -5,8 +5,8 @@ title-slide-attributes:
   data-background-image: ../FIGURES/HCAP-XC-Watermark-20260304.png
   data-background-size: contain
   data-background-opacity: "1"
-author: "HCAP R25"
-date: 2026-04-27
+author: "Emma Nichols"
+date: 2026-05-12
 execute: 
   echo: true
   warning: false
@@ -34,14 +34,11 @@ include-in-header:
         bottom: auto !important;
         left: auto !important;
       }
-      .reveal pre {
-        max-height: 820px !important;
-        width: 100% !important;
-        overflow-y: auto !important;
-      }
+      .reveal pre,
       .reveal pre code {
-        max-height: 820px !important;
-        overflow-y: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        white-space: pre-wrap;
       }
       .reveal .small-text {
         font-size: 0.78em;
@@ -67,8 +64,6 @@ include-in-header:
       }
       </style>
 ---
-
-## Session Overview
 
 ## Goals
 
