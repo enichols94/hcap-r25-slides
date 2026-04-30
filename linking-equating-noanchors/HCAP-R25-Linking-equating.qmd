@@ -7,6 +7,8 @@ title-slide-attributes:
   data-background-opacity: "1"
 author: "Emma Nichols"
 date: 2026-05-14
+bibliography: ../bibliography.bib
+csl: https://www.zotero.org/styles/harvard-cite-them-right
 format:
   revealjs:
     theme: white
@@ -20,6 +22,7 @@ format:
     controls-layout: bottom-right
     navigation-mode: linear
     scrollable: true
+    reference-location: document
 editor: source
 include-in-header:
   - text: |
@@ -63,556 +66,173 @@ include-in-header:
         object-position: center center;
         width: 100%;
       }
+      .reveal .callout-note {
+        border-left: 0.28em solid #007c89;
+        font-size: 0.78em;
+        padding-left: 0.7em;
+      }
+      .reveal .slides section {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      .slide-citation {
+        margin-top: auto;   /* pushes it to bottom */
+        font-size: 0.6em;
+        color: #555;
+      }
+      .my-center {
+        text-align: center;
+      }
       </style>
 ---
-
-Notes: 
-
-Random groups design - 3 methods: 
-  - Linear equating
-  - Equipercentile equating
-  - IRT-based equating
-
-If no random group design: 
-  - Common person design
-  - Nonequivalent groups with anchor test (NEAT) design 
-  - Weighting or matching methods to adjust for group differences  
-
-LLRT 
-
-
-
-
 
 ## Goals
 
 ::: {.small-text}
-- Introduce Mplus and lavaan syntax for measurement models.
-- Translate common measurement-model statements between Mplus and lavaan.
-- Build from familiar regression notation toward CFA models used in HCAP analyses.
+- Discuss linking and equating without anchor items. 
+- Consider different designs and methods that are commonly used throughout the literature. 
+- Introduce Linear Linking for Related Traits (LLRT), which combines anchor-item equating with linear equating and a NEAT design. 
 :::
 
-## Mplus 
+## What information can you leverage to link and equate with no (internal) anchors? 
 
-::: columns
-::: {.column width="33%"}
-![](../FIGURES/LVMWS-01-08-Mplus-Web-Page.png)
+::: {.callout-note}
+We have been using the term "anchor items" to refer to shared items within a domain or construct we seek to measure. However, in linking/equating there are also references to "anchor tests," which can be thought of as external anchors that are shared across groups but not necessarily within the same domain or construct (though they should be strongly related for the methods to work well).
 :::
-::: {.column width="33%"}
-![](../FIGURES/LVMWS-01-09-Mplus-Discussion.png)
-:::
-::: {.column width="33%"}
-![](../FIGURES/LVMWS-01-10-Mplus-Users-Guide.png)
-:::
-:::
-
-## Learning Mplus
 
 ::: {.small-text}
-MPLUS User Guide (Muthén & Muthén, 1998-2024) is the primary resource for learning Mplus syntax. The Mplus Discussion forum is also a helpful resource for learning from examples and asking questions.
+- Information on test performance in the same people (common person design)
+- Differences in test performance across groups assuming there are no differences in ability due to randomization (random groups design) 
+- Differences in test performance across groups that are different, but where we have adjusted for these differences (via weighting or matching) 
+- Information on a similar test, common across groups (Nonequivalent groups with anchor test [NEAT] design) 
 :::
 
-![](../FIGURES/LVMWS-01-33-MPUG-Example-3-1.png){.diagram}
+## Common person design 
 
+![](../FIGURES/hcap-r25-commongroup-linking.png){.diagram}
 
-## Lavaan 
-::: columns
-::: {.column width="50%"}
-![](../FIGURES/lavaan_website.png)
-:::
-::: {.column width="50%"}
-![](../FIGURES/lavaan_paper.png)
-:::
-:::
+## Random groups design 
 
-## Learing lavaan 
-::: {.small-text}
-lavaan documentation and examples are available on the lavaan website (Rosseel, 2012-2024). Reading and modifying existing models is one of the best ways to learn the syntax.
-:::
+![](../FIGURES/hcap-r25-randomgroup-linking.png){.diagram}
 
-![](../FIGURES/lavaan-tutorial.png){.diagram}
+- If groups are non-random, can use matching or weighting to adjust for differences in ability across groups.
 
-## Advantages and disadvantages
+## NEAT design 
 
-:::: {.columns .adv-disadv-slide}
-::: {.column width="50%"}
-### Mplus
+![](../FIGURES/hcap-r25-neat-linking.png){.diagram}
 
-**Advantages**
+Within each group, we have a common person design. 
 
-- Broad estimator support (MLR, WLSMV, Bayes)
-- Strong for categorical, multilevel, and mixture models
-- Optimized performance for complex SEM
-- Better handling of binary/categorical indicators (with MLR estimator)
+## Methods for linking and equating within each design 
 
-**Disadvantages**
+- Linear equating 
+- Equipercentile equating
 
-- Expensive (license required)
-- Less intuitive syntax for R users
-- Debugging can be challenging
-:::
+## Linear equating 
 
-::: {.column width="50%"}
-### Lavaan
+![](../FIGURES/linear-equating.png){.diagram}
 
-**Advantages**
-
-- Open-source and free
-- Integrates with R ecosystem (tidyverse, semTools)
-
-**Disadvantages**
-
-- Less efficient for very large/complex models
-- Limited native support for mixture models / advanced SEM
-- Survey design integration only possible for simple models (lavaan.survey package)
-- No MLR estimator for categorical indicators (only WLSMV)
-:::
-::::
-
-## Other options
-
-:::: {.columns .adv-disadv-slide}
-::: {.column width="50%"}
-### mirt
-
-**Best fit**
-
-- Item response theory (IRT) models
-- Binary, ordinal, and polytomous item responses (no continuous items)
-- Multidimensional latent traits
-- DIF and item-level measurement questions
-
-**Why use it**
-
-- R-native workflow for item-level measurement
-- Strong option when the main object is an item bank, scale, or test
-- Useful complement to SEM-focused tools
-:::
-
-::: {.column width="50%"}
-### OpenMx
-
-**Best fit**
-
-- Flexible structural equation models
-- Path, RAM, and matrix-style model specification
-- Custom constraints, algebra, and likelihoods
-- Complex multigroup informed models
-
-**Why use it**
-
-- Good when a model needs custom structure beyond standard SEM syntax
-- More flexible, but often more verbose than lavaan
-:::
-::::
-
-## Mplus workflow 
-
-![](../FIGURES/LVMWS-01-31-Mplus-Workflow.png){.diagram}
-
-## Lavaan workflow
-
-![](../FIGURES/lavaan_workflow.png){.diagram}
-
-
-## Two syntaxes, one model
-
-:::: columns
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-TITLE:    Descriptive model name
-DATA:     FILE = analysis.dat ;
-VARIABLE: NAMES = y1 y2 y3 x1 x2 ;
-MODEL:
-          eta1 BY y1-y3 ;
-          eta1 ON x1 x2 ;
-OUTPUT:   STANDARDIZED ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  eta1 =~ y1 + y2 + y3
-  eta1 ~ x1 + x2
-'
-
-fit <- lavaan::sem(model, data = dat)
-summary(fit, standardized = TRUE)
-```
-:::
-::::
-
-## Software orientation
-
-:::: columns
-::: {.column width="50%"}
-### Mplus input file
-
-::: {.small-text}
-- Plain text command file.
-- Organized into command sections such as `DATA`, `VARIABLE`, `MODEL`, and `OUTPUT`.
-- Case insensitive: `y1` and `Y1` are treated as the same variable name.
-:::
-:::
-
-::: {.column width="50%"}
-### lavaan model string
-
-::: {.small-text}
-- R object containing model syntax.
-- Data, estimation, and output options are usually specified in R function calls.
-- Case sensitive through R: `y1` and `Y1` are different variable names.
-:::
-:::
-::::
-
-## Model syntax operators
-
-| Model component | Mplus | lavaan |
-|---|---|---|
-| Covariance | `x WITH y ;` | `x ~~ y` |
-| Regression | `y ON x ;` | `y ~ x` |
-| Latent factor | `eta1 BY y1-y3 ;` | `eta1 =~ y1 + y2 + y3` |
-| Residual variance | `y1 ;` | `y1 ~~ y1` |
-| Intercept or mean | `[y1] ;` | `y1 ~ 1` |
-
-## Path Models
-
-## Covariance
-
-<div class="diagram-frame covariance-diagram">
-  <img src="../FIGURES/LVMWS-01-11-PATH-Covariance.png" alt="Covariance path diagram">
-</div>
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-TITLE:    A covariance
-DATA:     FILE = temp.dat ;
-VARIABLE: NAMES = y x ;
-MODEL:
-          x WITH y ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  x ~~ y
-'
-
-fit <- lavaan::sem(model, data = dat)
-```
-:::
-::::
-
-## Correlation
-
-<div class="diagram-frame covariance-diagram">
-  <img src="../FIGURES/LVMWS-01-11-PATH-Covariance.png" alt="Covariance and correlation path diagram">
-</div>
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-TITLE:    A covariance and correlation
-DATA:     FILE = temp.dat ;
-VARIABLE: NAMES = y x ;
-MODEL:
-          x WITH y ;
-OUTPUT:   STANDARDIZED ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  x ~~ y
-'
-
-fit <- lavaan::sem(model, data = dat)
-summary(fit, standardized = TRUE)
-```
-:::
-::::
-
-::: {.small-text}
-The covariance is the estimated model parameter. The correlation is the standardized version of that relationship.
-:::
-
-## Simple regression
-
-![](../FIGURES/LVMWS-01-12-PATH-Simple-Regression.png){.diagram width="42%"}
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-TITLE:    A regression
-DATA:     FILE = temp.dat ;
-VARIABLE: NAMES = y x ;
-MODEL:
-          y ON x ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  y ~ x
-'
-
-fit <- lavaan::sem(model, data = dat)
-```
-:::
-::::
-
-## Simple regression with intercept
-
-<div class="intercept-diagram">
-  <img src="../FIGURES/LVMWS-01-13-PATH-Simple-Regression-with-intercept.png" alt="Simple regression with intercept path diagram">
-</div>
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-TITLE:    A regression with intercept
-DATA:     FILE = temp.dat ;
-VARIABLE: NAMES = y x ;
-MODEL:
-          y ON x ;
-          [y] ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  y ~ x
-  y ~ 1
-'
-
-fit <- lavaan::sem(
-  model,
-  data = dat,
-  meanstructure = TRUE
-)
-```
-:::
-::::
-
-## Multiple regression
-
-![](../FIGURES/LVMWS-01-14-PATH-Multivariable-Regression.png){.diagram width="42%"}
+For a common person or random groups design: 
 
 $$
-y_1 = \nu_1 + \gamma_{11}x_1 + \gamma_{12}x_2 + \varepsilon_1
+\frac{Y-mean(Y)}{SD(Y)} = \frac{X-mean(X)}{SD(X)}
 $$
 
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-MODEL:
-          y1 ON x1 x2 ;
-```
+:::{.slide-citation}
+[@livingston_equating_2014]
 :::
 
-::: {.column width="50%"}
-### lavaan
+## Linear equating challenges 
 
-```r
-model <- '
-  y1 ~ x1 + x2
-'
-```
-:::
-::::
+- Very high or low scores prior to the transformation can lead to scores outside the range of the scale after transformation.
+- Assumes a linear relationship between the two tests, which may not always hold.
+- Can heavily depend on the ability of the common group used to create the transformation. 
 
-## Multivariate regression
-
-![](../FIGURES/LVMWS-01-15-PATH-Multivariate-Regression.png){.diagram width="42%"}
-
-$$
-\mathbf{y} = \mathbf{\nu} + \mathbf{\Gamma}\mathbf{x} + \mathbf{\varepsilon}
-$$
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-MODEL:
-          y1 y2 ON x1 x2 ;
-```
+:::{.slide-citation}
+[@livingston_equating_2014]
 :::
 
-::: {.column width="50%"}
-### lavaan
 
-```r
-model <- '
-  y1 ~ x1 + x2
-  y2 ~ x1 + x2
-'
-```
+## Equipercentile equating 
+
+![](../FIGURES/equipercentile-equating.png){.diagram}
+
+:::{.slide-citation}
+[@livingston_equating_2014]
 :::
-::::
 
-## Measurement Models
+## Equipercentile equating - another example 
 
-## CFA with covariates
+![](../FIGURES/equipercentile-equating2.png){.diagram}
+
+:::{.slide-citation}
+[@singh_cats_2021]
+:::
+
+## Equipercentile equating challenges
+
+:::{.small-text}
+- Distributions of test scores often have irregularities
+- Equating relationship cannot be determined for parts of the score range that are not observed in the data (e.g., very high or low scores)
+:::
+
+:::{.my-center}
+Solution = smoothing
+:::
+
+![](../FIGURES/equipercentileequating-smoothing.png){.diagram}
+
+:::{.slide-citation}
+[@livingston_equating_2014]
+:::
+
+## Linear Linking for Related Traits (LLRT)
+
+:::{.small-text}
+Developed for use in the context of specific cognitive domains without internal anchor items, where internal anchor items exist for a larger related or subsuming trait, such as general cognitive functioning  
+:::
+
+![](../FIGURES/LLRT-paper.png){.diagram}
+
+## LLRT approach 
+
+![](../FIGURES/LLRT-process.png){.diagram}
+
+:::{.slide-citation}
+[@nichols_linear_2022]
+:::
+
+## LLRT example 
+
+![](../FIGURES/hcap-r25-llrt-example.png){.diagram}
+
+:::{.slide-citation}
+[@nichols_linear_2022]
+:::
+
+## Intuition for LLRT 
+
+:::{.small-text}
+What we are essentially doing is: 
+
+1. Estimate within-group ordering based on within-group CFA models in the domain of interest (e.g., executive functioning).
+2. Estimate group differences (in mean and scaling) based on the harmonized related trait of interest (e.g., general cognitive functioning).
+3. Impose group differences from related trait, but retain within-group ordering from domain of interest to get the final result. 
+
+Note: using linear equating (rather than equipercentile equating) is probably okay because when generating factor scores from CFA models, we are already assuming that the latent traits are normally distributed.  
+:::
+
+## Closing takeaways 
 
 ::: {.small-text}
-Also called a Multiple Indicators, Multiple Causes model. Combines a measurement model for the latent construct with observed predictors of that construct.
+- All is not lost if you don't have internal anchor items. 
+- Different, arguably stronger assumptions are needed, but there are options. 
+- The design needs to leverage common information in some form: either from the same people, from comparable groups (randomization or modeling), from an external anchor test, or from a related trait with internal anchors.
+- Linear equating and equipercentile equating are perhaps the most commonly used methods that you will see in the literature, but LLRT is another option designed explicitly for cross-national harmonization of cognitive sub-domains. 
 :::
 
-::: {.cfa-stack}
-<div class="cfa-diagram">
-  <img src="../FIGURES/LVMWS-01-16-PATH-CFA-with-covariates.png" alt="CFA with covariates path diagram">
-</div>
+## References
 
-::: {.cfa-equations}
-$$
-\begin{aligned}
-\mathbf{y} &= \mathbf{\nu} + \mathbf{\Lambda}\mathbf{\eta} + \mathbf{\varepsilon} \\
-\mathbf{\eta} &= \mathbf{\alpha} + \mathbf{\Gamma}\mathbf{x} + \mathbf{\zeta}
-\end{aligned}
-$$
-:::
-:::
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-MODEL:
-          eta1 BY y1-y3 ;
-          eta1 ON x1 x2 ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  eta1 =~ y1 + y2 + y3
-  eta1 ~ x1 + x2
-'
-```
-:::
-::::
-
-## MIMIC model with direct effect
-
-::: {.mimic-stack}
-<div class="mimic-diagram">
-  <img src="../FIGURES/LVMWS-01-17-MIMIC-direct-effect.png" alt="MIMIC model with direct effect path diagram">
-</div>
-
-::: {.mimic-equations}
-$$
-\begin{aligned}
-\mathbf{y} &= \mathbf{\nu} + \mathbf{\Lambda}\mathbf{\eta} + \mathbf{K}\mathbf{x} + \mathbf{\varepsilon} \\
-\mathbf{\eta} &= \mathbf{\alpha} + \mathbf{\Gamma}\mathbf{x} + \mathbf{\zeta}
-\end{aligned}
-$$
-:::
-:::
-
-:::: {.columns .syntax-pair}
-::: {.column width="50%"}
-### Mplus
-
-```mplus
-MODEL:
-          eta1 BY y1-y3 ;
-          eta1 ON x1 x2 ;
-          y3 ON x2 ;
-```
-:::
-
-::: {.column width="50%"}
-### lavaan
-
-```r
-model <- '
-  eta1 =~ y1 + y2 + y3
-  eta1 ~ x1 + x2
-  y3 ~ x2
-'
-```
-:::
-::::
-
-## Model families
-
-![](../FIGURES/LVMWS-01-18-PATH-path-regression-sem.png){.diagram width="38%"}
-
-::: {.model-families-table}
-| Question | Model family | Typical syntax move |
-|---|---|---|
-| Are two observed variables related? | Covariance/correlation | `~~` or `WITH` |
-| Does one observed variable predict another? | Regression | `~` or `ON` |
-| Do indicators measure a latent construct? | CFA | `=~` or `BY` |
-| Do covariates predict a latent construct? | MIMIC | latent variable regression |
-| Does a covariate directly affect an item? | MIMIC with direct effect | item regression |
-:::
-
-## Translation habits
-
-:::: columns
-::: {.column width="50%"}
-### In Mplus, look for
-
-::: {.small-text}
-- Command sections ending with semicolons.
-- `BY` for measurement.
-- `ON` for regressions.
-- `WITH` for covariances.
-- `OUTPUT: STANDARDIZED ;` for standardized results.
-:::
-:::
-
-::: {.column width="50%"}
-### In lavaan, look for
-
-::: {.small-text}
-- A model string passed to an R function.
-- `=~` for measurement.
-- `~` for regressions.
-- `~~` for variances and covariances.
-- `standardized = TRUE` in `summary()` for standardized results.
-:::
-:::
-::::
-
-## Closing takeaways
-
-::: {.small-text}
-- Mplus and lavaan express the same model ideas with different syntax conventions.
-- Syntax translation is easiest when each model statement is mapped to its path diagram meaning.
+::: {#refs}
 :::
